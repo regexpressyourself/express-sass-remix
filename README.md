@@ -12,7 +12,7 @@
 ### Initial setup
 
 1. Create: `npx prisma init --datasource-provider postgresql`
-__edit prisma/schema.prisma and add a model__
+    - _edit prisma/schema.prisma and add a model_
 2. Generate: `npx prisma generate`
 
 ### Maintenance
