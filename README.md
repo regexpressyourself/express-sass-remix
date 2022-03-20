@@ -1,4 +1,4 @@
-# Sam's Remix App!
+# Sam's Remix App Starter Kit!
 
 - [Remix Docs](https://remix.run/docs)
 
