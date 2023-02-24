@@ -3,6 +3,7 @@ import { Links, LiveReload, Outlet, useCatch, Meta, Scripts } from "remix";
 import globalStylesUrl from "./styles/global.css";
 import globalMediumStylesUrl from "./styles/global-medium.css";
 import globalLargeStylesUrl from "./styles/global-large.css";
+import manifest from './manifest.json'
 
 export const links: LinksFunction = () => {
   return [
@@ -20,20 +21,25 @@ export const links: LinksFunction = () => {
       href: globalLargeStylesUrl,
       media: "screen and (min-width: 1024px)",
     },
+    {
+      rel: "icon",
+      href: manifest.faviconSrc,
+      type: "image/png",
+    },
   ];
 };
 
 export const meta: MetaFunction = () => {
-  const description = `Learn Remix and laugh at the same time!`;
   return {
-    description,
-    keywords: "Remix,jokes",
-    "twitter:image": "https://remix-jokes.lol/social.png",
+    description: manifest.description,
+    keywords: manifest.keywords,
+    "twitter:image": manifest.twitterImage,
     "twitter:card": "summary_large_image",
-    "twitter:creator": "@remix_run",
-    "twitter:site": "@remix_run",
-    "twitter:title": "Remix Jokes",
-    "twitter:description": description,
+    "twitter:creator": manifest.twitterHandle,
+    "twitter:site": manifest.twitterSite,
+    "twitter:title": manifest.title,
+    "twitter:description": manifest.description,
+    viewport: "width=device-width, initial-scale=1",
   };
 };
 

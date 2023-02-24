@@ -1,17 +1,16 @@
 import type { ActionFunction, LoaderFunction } from "remix";
 import {
-  useActionData,
-  redirect,
-  json,
-  useCatch,
-  Link,
   Form,
+  json,
+  Link,
+  redirect,
+  useActionData,
+  useCatch,
   useTransition,
 } from "remix";
-
-import { JokeDisplay } from "~/components/joke";
+import { RoutineDisplay } from "~/components/routine/routine";
 import { db } from "~/utils/db.server";
-import { requireUserId, getUserId } from "~/utils/session.server";
+import { getUserId, requireUserId } from "~/utils/session.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request);
@@ -21,15 +20,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   return {};
 };
 
-function validateJokeContent(content: string) {
-  if (content.length < 10) {
-    return `That joke is too short`;
-  }
-}
-
-function validateJokeName(name: string) {
+function validateRoutineName(name: string) {
   if (name.length < 2) {
-    return `That joke's name is too short`;
+    return `That routine's name is too short`;
   }
 }
 
@@ -37,11 +30,9 @@ type ActionData = {
   formError?: string;
   fieldErrors?: {
     name: string | undefined;
-    content: string | undefined;
   };
   fields?: {
     name: string;
-    content: string;
   };
 };
 
@@ -51,54 +42,42 @@ export const action: ActionFunction = async ({ request }) => {
   const userId = await requireUserId(request);
   const form = await request.formData();
   const name = form.get("name");
-  const content = form.get("content");
-  if (typeof name !== "string" || typeof content !== "string") {
+  if (typeof name !== "string") {
     return badRequest({
       formError: `Form not submitted correctly.`,
     });
   }
 
   const fieldErrors = {
-    name: validateJokeName(name),
-    content: validateJokeContent(content),
+    name: validateRoutineName(name),
   };
-  const fields = { name, content };
+  const fields = { name };
   if (Object.values(fieldErrors).some(Boolean)) {
     return badRequest({ fieldErrors, fields });
   }
 
-  const joke = await db.joke.create({
-    data: { ...fields, jokesterId: userId },
+  const routine = await db.routine.create({
+    data: { ...fields, routineUser: userId },
   });
-  return redirect(`/jokes/${joke.id}`);
+  return redirect(`/routines/${routine.id}`);
 };
 
-export default function NewJokeRoute() {
+export default function NewRoutineRoute() {
   const actionData = useActionData<ActionData>();
   const transition = useTransition();
 
   if (transition.submission) {
     const name = transition.submission.formData.get("name");
-    const content = transition.submission.formData.get("content");
-    if (
-      typeof name === "string" &&
-      typeof content === "string" &&
-      !validateJokeContent(content) &&
-      !validateJokeName(name)
-    ) {
+    if (typeof name === "string" && !validateRoutineName(name)) {
       return (
-        <JokeDisplay
-          joke={{ name, content }}
-          isOwner={true}
-          canDelete={false}
-        />
+        <RoutineDisplay routine={{ name }} isOwner={true} canDelete={false} />
       );
     }
   }
 
   return (
     <div>
-      <p>Add your own hilarious joke</p>
+      <p>Add your routine</p>
       <Form method="post">
         <div>
           <label>
@@ -118,39 +97,15 @@ export default function NewJokeRoute() {
               {actionData.fieldErrors.name}
             </p>
           ) : null}
-    </div>
-      <div>
-        <label>
-          Content:{" "}
-          <textarea
-            defaultValue={actionData?.fields?.content}
-            name="content"
-            aria-invalid={
-              Boolean(actionData?.fieldErrors?.content) || undefined
-            }
-            aria-describedby={
-              actionData?.fieldErrors?.content ? "content-error" : undefined
-            }
-          />
-        </label>
-        {actionData?.fieldErrors?.content ? (
-          <p
-            className="form-validation-error"
-            role="alert"
-            id="content-error"
-          >
-            {actionData.fieldErrors.content}
-          </p>
-        ) : null}
-      </div>
+        </div>
         <div>
           <button type="submit" className="button">
             Add
           </button>
         </div>
-    </Form>
+      </Form>
     </div>
-  );
+  )
 }
 
 export function CatchBoundary() {
@@ -159,7 +114,7 @@ export function CatchBoundary() {
   if (caught.status === 401) {
     return (
       <div className="error-container">
-        <p>You must be logged in to create a joke.</p>
+        <p>You must be logged in to create a routine.</p>
         <Link to="/login">Login</Link>
       </div>
     );

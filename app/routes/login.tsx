@@ -11,8 +11,8 @@ export const links: LinksFunction = () => {
 
 export const meta: MetaFunction = () => {
   return {
-    title: "Remix Jokes | Login",
-    description: "Login to submit your own jokes to Remix Jokes!",
+    title: "Remix Routines | Login",
+    description: "Login to submit your own routines to Remix Routines!",
   };
 };
 
@@ -48,7 +48,7 @@ export const action: ActionFunction = async ({ request }) => {
   const loginType = form.get("loginType");
   const username = form.get("username");
   const password = form.get("password");
-  const redirectTo = form.get("redirectTo") || "/jokes";
+  const redirectTo = form.get("redirectTo") || "/dashboard";
   if (
     typeof loginType !== "string" ||
     typeof username !== "string" ||
@@ -213,7 +213,7 @@ export default function Login() {
           <Link to="/">Home</Link>
         </li>
         <li>
-          <Link to="/jokes">Jokes</Link>
+          <Link to="/dashboard">Routines</Link>
         </li>
       </ul>
     </div>

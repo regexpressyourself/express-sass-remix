@@ -5,18 +5,16 @@
   font-style: normal;
 }
 :root {
-  --hs-links: 48 100%;
   --color-foreground: hsl(0, 0%, 100%);
-  --color-background: hsl(278, 73%, 19%);
-  --color-links: hsl(var(--hs-links) 50%);
-  --color-links-hover: hsl(var(--hs-links) 45%);
-  --color-border: hsl(277, 85%, 38%);
-  --color-invalid: hsl(356, 100%, 71%);
+  --color-background: hsl(195, 83%, 16%);
+  --color-links: hsl(42, 100%, 50%);
+  --color-links-hover: hsl(42, 100%, 45%);
+  --color-border: hsl(195, 83%, 38%);
+  --color-invalid: hsl(346, 84%, 61%);
   --gradient-background: radial-gradient(
     circle,
-    rgba(152, 11, 238, 1) 0%,
-    rgba(118, 15, 181, 1) 35%,
-    rgba(58, 13, 85, 1) 100%
+    rgba(17, 138, 178, 1) 0%,
+    rgba(7, 59, 76, 1) 100%
   );
   --font-body: -apple-system, "Segoe UI", Helvetica Neue, Helvetica,
     Roboto, Arial, sans-serif, system-ui, "Apple Color Emoji",
