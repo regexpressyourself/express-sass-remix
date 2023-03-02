@@ -16,9 +16,8 @@
     rgba(17, 138, 178, 1) 0%,
     rgba(7, 59, 76, 1) 100%
   );
-  --font-body: -apple-system, "Segoe UI", Helvetica Neue, Helvetica,
-    Roboto, Arial, sans-serif, system-ui, "Apple Color Emoji",
-    "Segoe UI Emoji";
+  --font-body: -apple-system, "Segoe UI", Helvetica Neue, Helvetica, Roboto,
+    Arial, sans-serif, system-ui, "Apple Color Emoji", "Segoe UI Emoji";
   --font-display: baloo, var(--font-body);
 }
 
@@ -90,6 +89,7 @@ h5,
 h6 {
   font-family: var(--font-display);
   margin: 0;
+  padding-bottom: 1rem;
 }
 
 h1 {
@@ -189,6 +189,20 @@ h6 {
 
 .button:focus:not(:focus-visible) {
   outline: none;
+}
+
+.button.danger {
+  background-color: var(--color-invalid);
+  color: var(--color-foreground);
+}
+
+.button.info {
+  background-color: var(--color-foreground);
+  color: var(--color-background);
+}
+
+.w-100 {
+  width: 100%;
 }
 
 /* forms */
@@ -345,6 +359,10 @@ label > [type=radio] {
   background-color: rgba(231, 70, 81, 0.747);
   border-radius: 0.25rem;
   padding: 0.5rem 1rem;
+}
+
+.hidden {
+  display: none;
 }
 
 /*# sourceMappingURL=global.css.map */

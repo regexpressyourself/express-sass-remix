@@ -1,4 +1,5 @@
 import type { Workout } from "@prisma/client";
+import { useRevalidator } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import type { ActionFunction, LoaderFunction, MetaFunction } from "remix";
 import {
@@ -35,7 +36,10 @@ type LoaderData = {
   routine: RoutineWithWorkouts;
   isOwner: boolean;
 };
-type ActionData = { status?: number; form?: string };
+type ActionData = {
+  type?: string;
+  status?: number;
+};
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const userId = (await getUserId(request)) as string;
@@ -66,11 +70,14 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export const action: ActionFunction = async ({ request, params }) => {
   const form = await request.formData();
+  console.log("form.get(_method");
+  console.log(form.get("_method"));
 
-  if (form.get("_method") === "delete") {
+  if (form.get("_method") === "delete-routine") {
     const userId = await requireUserId(request);
+    const id = form.get("_id") as string;
     const routine = await db.routine.findUnique({
-      where: { id: params.routineId },
+      where: { id },
     });
     if (!routine) {
       throw new Response("Can't delete what does not exist", { status: 404 });
@@ -80,22 +87,53 @@ export const action: ActionFunction = async ({ request, params }) => {
         status: 401,
       });
     }
-    await db.routine.delete({ where: { id: params.routineId } });
+    await db.routine.delete({ where: { id } });
     return redirect(`/routines`);
+  }
+  if (form.get("_method") === "delete-workout") {
+    const userId = await requireUserId(request);
+    const id = form.get("_id") as string;
+    const workout = await db.workout.findUnique({
+      where: { id },
+    });
+    if (!workout) {
+      throw new Response("Can't delete what does not exist", { status: 404 });
+    }
+    if (workout.workoutUser !== userId) {
+      throw new Response("Pssh, nice try. That's not your workout", {
+        status: 401,
+      });
+    }
+
+    await db.routine.update({
+      where: { id: params.routineId },
+      data: {
+        workouts: {
+          disconnect: [{ id }],
+        },
+      },
+    });
+
+    return { type: "delete-workout", status: 200 };
   }
 
   if (form.get("_method") === "patch") {
     const userId = await requireUserId(request);
 
     const name = form.get("name") as string;
-    const workoutIds = form.getAll("workouts");
-    const removedWorkoutIds = form.getAll("_removedWorkoutIds").filter(
-      (id) => !workoutIds.includes(id)
-    );
-
+    const workoutOrder = form.get("_workoutOrder") as string;
+    const workoutIds = (form.get("_workouts") as string)?.split(",") || [];
+    const removedWorkoutIds =
+      (form?.get("_removedWorkoutIds") as string)
+        ?.split(",")
+        ?.filter((id) => !workoutIds.includes(id)) || [];
 
     const routine = await db.routine.findUnique({
       where: { id: params.routineId },
+
+      include: {
+        workouts: true,
+      },
     });
     if (!routine) {
       throw new Response("Can't delete what does not exist", { status: 404 });
@@ -108,13 +146,19 @@ export const action: ActionFunction = async ({ request, params }) => {
         status: 401,
       });
     }
+    const currentWorkoutIds = routine.workouts.map((workout) => workout.id);
+
+    const newWorkoutIds = workoutIds.filter((workoutId) => {
+      return !currentWorkoutIds.includes(workoutId as string);
+    });
 
     await db.routine.update({
       where: { id: params.routineId },
       data: {
         name,
+        workoutOrder: JSON.parse(workoutOrder),
         workouts: {
-          connect: workoutIds.map((id) => {
+          connect: newWorkoutIds.map((id) => {
             return { id: id as string };
           }),
           disconnect: removedWorkoutIds.map((id) => {
@@ -131,23 +175,31 @@ export default function RoutineRoute() {
   const data = useLoaderData<LoaderData>();
   const actionData = useActionData<ActionData>();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteWorkoutModal, setShowDeleteWorkoutModal] =
+    useState<boolean>(false);
+  const [showAddWorkoutModal, setShowAddWorkoutModal] = useState(false);
+ const revalidator = useRevalidator();
+
+  // run when you need to update
 
   useEffect(() => {
-    if (actionData?.status === 200 && actionData?.form === "patch") {
-      setShowEditModal(false);
+    if (actionData?.status === 200 && actionData?.type === "delete-workout") {
+      setShowDeleteWorkoutModal(false);
+  revalidator.revalidate()
     }
   }, [actionData]);
 
   return (
     <RoutineDisplay
-      workouts={data.workouts}
-      showEditModal={showEditModal}
-      showDeleteModal={showDeleteModal}
-      setShowEditModal={setShowEditModal}
-      setShowDeleteModal={setShowDeleteModal}
       routine={data.routine}
       isOwner={data.isOwner}
+      workouts={data.workouts}
+      showAddWorkoutModal={showAddWorkoutModal}
+      setShowAddWorkoutModal={setShowAddWorkoutModal}
+      showDeleteModal={showDeleteModal}
+      setShowDeleteModal={setShowDeleteModal}
+      setShowDeleteWorkoutModal={setShowDeleteWorkoutModal}
+      showDeleteWorkoutModal={showDeleteWorkoutModal}
     />
   );
 }

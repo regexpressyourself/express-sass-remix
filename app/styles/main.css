@@ -59,6 +59,16 @@
   gap: 1rem;
 }
 
+main.main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-container {
+  align-self: flex-end;
+}
+
 .main-list {
   max-width: 12rem;
 }
@@ -74,6 +84,7 @@
 }
 
 .modal-backdrop {
+  z-index: 1000;
   position: fixed;
   top: 0;
   bottom: 0;
@@ -83,14 +94,33 @@
 }
 
 .modal {
+  z-index: 1001;
   position: fixed;
-  padding: 1rem;
-  top: 1rem;
-  bottom: 1rem;
+  padding: 3rem;
+  top: 3rem;
+  bottom: 3rem;
   left: 1rem;
   right: 1rem;
   padding: 2rem;
   background-color: var(--color-background);
+}
+.modal .content {
+  position: absolute;
+  left: 2rem;
+  right: 2rem;
+}
+.modal button.modal-action {
+  width: 100%;
+  margin-top: 50%;
+}
+.modal.confirmation-modal {
+  top: 50%;
+}
+.modal.confirmation-modal .content {
+  position: absolute;
+  left: 2rem;
+  right: 2rem;
+  bottom: 2rem;
 }
 
 .modal-x {
@@ -104,6 +134,37 @@
   color: white;
   width: 3rem;
   height: 3rem;
+}
+
+.dnd-list {
+  width: 100%;
+  color: var(--color-background);
+}
+.dnd-list .card {
+  border: 1px dashed gray;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: white;
+  cursor: move;
+}
+
+.add-list-button {
+  margin-top: -1rem;
+}
+
+.item-header {
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.item-header button {
+  flex-basis: 30%;
+  font-size: 1rem;
+}
+
+.workout-select {
+  color: var(--color-background);
 }
 
 @media print, (min-width: 640px) {

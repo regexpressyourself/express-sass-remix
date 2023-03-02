@@ -1,9 +1,8 @@
 import type { ActionFunction, LinksFunction, MetaFunction } from "remix";
-import { useActionData, json, Form, useSearchParams, Link } from "remix";
-
+import { Form, json, Link, useActionData, useSearchParams } from "remix";
+import stylesUrl from "~/styles/login.css";
 import { db } from "~/utils/db.server";
 import { createUserSession, login, register } from "~/utils/session.server";
-import stylesUrl from "~/styles/login.css";
 
 export const links: LinksFunction = () => {
   return [{ rel: "stylesheet", href: stylesUrl }];
@@ -170,53 +169,53 @@ export default function Login() {
                 {actionData?.fieldErrors.username}
               </p>
             ) : null}
-    </div>
-      <div>
-        <label htmlFor="password-input">Password</label>
-        <input
-          id="password-input"
-          name="password"
-          defaultValue={actionData?.fields?.password}
-          type="password"
-          aria-invalid={
-            Boolean(actionData?.fieldErrors?.password) || undefined
-          }
-          aria-describedby={
-            actionData?.fieldErrors?.password ? "password-error" : undefined
-          }
-        />
-        {actionData?.fieldErrors?.password ? (
-          <p
-            className="form-validation-error"
-            role="alert"
-            id="password-error"
-          >
-            {actionData?.fieldErrors.password}
-          </p>
-        ) : null}
-      </div>
-        <div id="form-error-message">
-          {actionData?.formError ? (
-            <p className="form-validation-error" role="alert">
-              {actionData?.formError}
-            </p>
-          ) : null}
-        </div>
+          </div>
+          <div>
+            <label htmlFor="password-input">Password</label>
+            <input
+              id="password-input"
+              name="password"
+              defaultValue={actionData?.fields?.password}
+              type="password"
+              aria-invalid={
+                Boolean(actionData?.fieldErrors?.password) || undefined
+              }
+              aria-describedby={
+                actionData?.fieldErrors?.password ? "password-error" : undefined
+              }
+            />
+            {actionData?.fieldErrors?.password ? (
+              <p
+                className="form-validation-error"
+                role="alert"
+                id="password-error"
+              >
+                {actionData?.fieldErrors.password}
+              </p>
+            ) : null}
+          </div>
+          <div id="form-error-message">
+            {actionData?.formError ? (
+              <p className="form-validation-error" role="alert">
+                {actionData?.formError}
+              </p>
+            ) : null}
+          </div>
           <button type="submit" className="button">
             Submit
           </button>
-    </Form>
-    </div>
-    <div className="links">
-      <ul>
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        <li>
-          <Link to="/dashboard">Routines</Link>
-        </li>
-      </ul>
-    </div>
+        </Form>
+      </div>
+      <div className="links">
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <Link to="/dashboard">Routines</Link>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

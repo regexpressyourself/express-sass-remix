@@ -1,14 +1,9 @@
-import type { Workout } from "@prisma/client";
-import { useEffect, useState } from "react";
+import type { Workout, Exercise } from "@prisma/client";
+import { useState } from "react";
 import type { ActionFunction, LoaderFunction, MetaFunction } from "remix";
-import {
-  redirect,
-  useActionData,
-  useCatch,
-  useLoaderData,
-  useParams,
-} from "remix";
+import { redirect, useCatch, useLoaderData, useParams } from "remix";
 import { WorkoutDisplay } from "~/components/workout/workout";
+import type { RoutineWithWorkouts , WorkoutWithExercises} from "~/types/db-includes";
 import { db } from "~/utils/db.server";
 import { getUserId, requireUserId } from "~/utils/session.server";
 
@@ -29,14 +24,25 @@ export const meta: MetaFunction = ({
   };
 };
 
-type LoaderData = { workout: Workout; isOwner: boolean };
-type ActionData = { status?: number; form?: string };
+type LoaderData = {
+  workout: WorkoutWithExercises;
+  exercises: Exercise[];
+  isOwner: boolean;
+};
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const userId = await getUserId(request);
+  const userId = (await getUserId(request)) as string;
 
+  const exercises = await db.exercise.findMany({
+    where: {
+      exerciseUser: userId,
+    },
+  });
   const workout = await db.workout.findUnique({
-    where: { id: params.workoutId },
+    where: { id: params.workoutId},
+    include: {
+      exercises: true,
+    },
   });
   if (!workout) {
     throw new Response("What a workout! Not found.", {
@@ -45,6 +51,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   }
   const data: LoaderData = {
     workout,
+    exercises,
     isOwner: userId === workout.workoutUser,
   };
   return data;
@@ -52,6 +59,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export const action: ActionFunction = async ({ request, params }) => {
   const form = await request.formData();
+
   if (form.get("_method") === "delete") {
     const userId = await requireUserId(request);
     const workout = await db.workout.findUnique({
@@ -67,11 +75,25 @@ export const action: ActionFunction = async ({ request, params }) => {
     }
     await db.workout.delete({ where: { id: params.workoutId } });
     return redirect(`/workouts`);
-  } else if (form.get("_method") === "patch") {
-    const name = form.get("name") as string;
+  }
+
+  if (form.get("_method") === "patch") {
     const userId = await requireUserId(request);
+
+    const name = form.get("name") as string;
+    const exerciseOrder = form.get("_exerciseOrder") as string;
+    const exerciseIds = (form.get("_exercises") as string)?.split(",") || [];
+    const removedWorkoutIds =
+      (form?.get("_removedWorkoutIds") as string)
+        ?.split(",")
+        ?.filter((id) => !exerciseIds.includes(id)) || [];
+
     const workout = await db.workout.findUnique({
       where: { id: params.workoutId },
+
+      include: {
+        exercises: true,
+      },
     });
     if (!workout) {
       throw new Response("Can't delete what does not exist", { status: 404 });
@@ -84,37 +106,47 @@ export const action: ActionFunction = async ({ request, params }) => {
         status: 401,
       });
     }
+    const currentWorkoutIds = workout.exercises.map((exercise) => exercise.id);
+
+    const newWorkoutIds = exerciseIds.filter((exerciseId) => {
+      return !currentWorkoutIds.includes(exerciseId as string);
+    });
 
     await db.workout.update({
       where: { id: params.workoutId },
-      data: { name },
+      data: {
+        name,
+        exerciseOrder: JSON.parse(exerciseOrder),
+        exercises: {
+          connect: newWorkoutIds.map((id) => {
+            return { id: id as string };
+          }),
+          disconnect: removedWorkoutIds.map((id) => {
+            return { id: id as string };
+          }),
+        },
+      },
     });
     return { form: "patch", status: 200 };
   }
 };
 
-export default function WorkoutRoute() {
+export default function RoutineRoute() {
   const data = useLoaderData<LoaderData>();
-  const actionData = useActionData<ActionData>();
-  console.log("actionData");
-  console.log(actionData);
+  console.log("data")
+  console.log(data)
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-
-  useEffect(() => {
-    if (actionData?.status === 200 && actionData?.form === "patch") {
-      setShowEditModal(false);
-    }
-  }, [actionData]);
+  const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
 
   return (
     <WorkoutDisplay
-      showEditModal={showEditModal}
-      showDeleteModal={showDeleteModal}
-      setShowEditModal={setShowEditModal}
-      setShowDeleteModal={setShowDeleteModal}
       workout={data.workout}
       isOwner={data.isOwner}
+      exercises={data.exercises}
+      showAddExerciseModal={showAddExerciseModal}
+      setShowAddExerciseModal={setShowAddExerciseModal}
+      showDeleteModal={showDeleteModal}
+      setShowDeleteModal={setShowDeleteModal}
     />
   );
 }

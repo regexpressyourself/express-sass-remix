@@ -1,6 +1,6 @@
 import { useCatch } from "remix";
 
-export default function WorkoutsIndexRoute() {
+export default function RoutinesIndexRoute() {
   return null;
 }
 
@@ -9,7 +9,7 @@ export function CatchBoundary() {
 
   if (caught.status === 404) {
     return (
-      <div className="error-container">There are no workouts to display.</div>
+      <div className="error-container">There are no routines to display.</div>
     );
   }
   throw new Error(`Unexpected caught response with status: ${caught.status}`);

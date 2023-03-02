@@ -30,9 +30,9 @@ export default function RoutinesRoute() {
   const loaderData = useLoaderData<LoaderData>();
   const { user } = loaderData;
   return (
-    <>
+    <main className="main">
       <Nav user={user} />
       <Outlet></Outlet>
-    </>
+    </main>
   );
 }

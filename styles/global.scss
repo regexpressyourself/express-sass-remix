@@ -6,7 +6,6 @@
 }
 
 :root {
-
   --color-foreground: hsl(0, 0%, 100%);
   --color-background: hsl(195, 83%, 16%);
   --color-links: hsl(42, 100%, 50%);
@@ -18,9 +17,8 @@
     rgba(17, 138, 178, 1) 0%,
     rgba(7, 59, 76, 1) 100%
   );
-  --font-body: -apple-system, "Segoe UI", Helvetica Neue, Helvetica,
-    Roboto, Arial, sans-serif, system-ui, "Apple Color Emoji",
-    "Segoe UI Emoji";
+  --font-body: -apple-system, "Segoe UI", Helvetica Neue, Helvetica, Roboto,
+    Arial, sans-serif, system-ui, "Apple Color Emoji", "Segoe UI Emoji";
   --font-display: baloo, var(--font-body);
 }
 
@@ -92,6 +90,7 @@ h5,
 h6 {
   font-family: var(--font-display);
   margin: 0;
+  padding-bottom: 1rem;
 }
 
 h1 {
@@ -165,8 +164,7 @@ h6 {
   box-shadow: 0 var(--shadow-size) 0 0 var(--shadow-color);
   outline-offset: 2px;
   transform: translateY(0);
-  transition: background-color 50ms ease-out, box-shadow
-      50ms ease-out,
+  transition: background-color 50ms ease-out, box-shadow 50ms ease-out,
     transform 100ms cubic-bezier(0.3, 0.6, 0.8, 1.25);
 }
 
@@ -174,17 +172,13 @@ h6 {
   --raise: 1px;
   color: var(--color-background);
   text-decoration: none;
-  box-shadow: 0 calc(var(--shadow-size) + var(--raise)) 0 0 var(
-      --shadow-color
-    );
+  box-shadow: 0 calc(var(--shadow-size) + var(--raise)) 0 0 var(--shadow-color);
   transform: translateY(calc(var(--raise) * -1));
 }
 
 .button:active {
   --press: 1px;
-  box-shadow: 0 calc(var(--shadow-size) - var(--press)) 0 0 var(
-      --shadow-color
-    );
+  box-shadow: 0 calc(var(--shadow-size) - var(--press)) 0 0 var(--shadow-color);
   transform: translateY(var(--press));
   background-color: var(--color-links-hover);
 }
@@ -198,6 +192,19 @@ h6 {
 
 .button:focus:not(:focus-visible) {
   outline: none;
+}
+
+.button.danger {
+  background-color: var(--color-invalid);
+  color: var(--color-foreground);
+}
+
+.button.info {
+  background-color: var(--color-foreground);
+  color: var(--color-background);
+}
+.w-100 {
+  width: 100%;
 }
 
 /* forms */
@@ -356,4 +363,8 @@ label > [type="radio"] {
   background-color: hsla(356, 77%, 59%, 0.747);
   border-radius: 0.25rem;
   padding: 0.5rem 1rem;
+}
+
+.hidden {
+  display: none;
 }

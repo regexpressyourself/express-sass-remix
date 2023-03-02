@@ -30,6 +30,7 @@ model Routine {
   routineUser String
   user        User                 @relation(fields: [routineUser], references: [id], onDelete: Cascade)
   workouts    Workout[]
+  workoutOrder Json?
   name        String
 }
 
@@ -41,6 +42,7 @@ model Workout {
   user        User                  @relation(fields: [workoutUser], references: [id], onDelete: Cascade)
   routines    Routine[]
   exercises   Exercise[]
+  exerciseOrder Json?
   sets        Set[]
   name        String
 }
