@@ -1,9 +1,21 @@
-import type { Workout, Exercise } from "@prisma/client";
-import { useState } from "react";
-import type { ActionFunction, LoaderFunction, MetaFunction } from "remix";
-import { redirect, useCatch, useLoaderData, useParams } from "remix";
+import type { Exercise } from "@prisma/client";
+import {
+  redirect,
+  type ActionFunction,
+  type LoaderFunction,
+  type MetaFunction,
+} from "@remix-run/node";
+import {
+  Link,
+  useActionData,
+  useCatch,
+  useLoaderData,
+  useParams,
+  useRevalidator,
+} from "@remix-run/react";
+import { useEffect, useState } from "react";
 import { WorkoutDisplay } from "~/components/workout/workout";
-import type { RoutineWithWorkouts , WorkoutWithExercises} from "~/types/db-includes";
+import type { WorkoutWithExercises } from "~/types/db-includes";
 import { db } from "~/utils/db.server";
 import { getUserId, requireUserId } from "~/utils/session.server";
 
@@ -25,9 +37,13 @@ export const meta: MetaFunction = ({
 };
 
 type LoaderData = {
-  workout: WorkoutWithExercises;
   exercises: Exercise[];
+  workout: WorkoutWithExercises;
   isOwner: boolean;
+};
+type ActionData = {
+  type?: string;
+  status?: number;
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -39,7 +55,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     },
   });
   const workout = await db.workout.findUnique({
-    where: { id: params.workoutId},
+    where: { id: params.workoutId },
     include: {
       exercises: true,
     },
@@ -60,10 +76,11 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export const action: ActionFunction = async ({ request, params }) => {
   const form = await request.formData();
 
-  if (form.get("_method") === "delete") {
+  if (form.get("_method") === "delete-workout") {
     const userId = await requireUserId(request);
+    const id = form.get("_id") as string;
     const workout = await db.workout.findUnique({
-      where: { id: params.workoutId },
+      where: { id },
     });
     if (!workout) {
       throw new Response("Can't delete what does not exist", { status: 404 });
@@ -73,8 +90,34 @@ export const action: ActionFunction = async ({ request, params }) => {
         status: 401,
       });
     }
-    await db.workout.delete({ where: { id: params.workoutId } });
+    await db.workout.delete({ where: { id } });
     return redirect(`/workouts`);
+  }
+  if (form.get("_method") === "delete-exercise") {
+    const userId = await requireUserId(request);
+    const id = form.get("_id") as string;
+    const exercise = await db.exercise.findUnique({
+      where: { id },
+    });
+    if (!exercise) {
+      throw new Response("Can't delete what does not exist", { status: 404 });
+    }
+    if (exercise.exerciseUser !== userId) {
+      throw new Response("Pssh, nice try. That's not your exercise", {
+        status: 401,
+      });
+    }
+
+    await db.workout.update({
+      where: { id: params.workoutId },
+      data: {
+        exercises: {
+          disconnect: [{ id }],
+        },
+      },
+    });
+
+    return { type: "delete-exercise", status: 200 };
   }
 
   if (form.get("_method") === "patch") {
@@ -83,8 +126,8 @@ export const action: ActionFunction = async ({ request, params }) => {
     const name = form.get("name") as string;
     const exerciseOrder = form.get("_exerciseOrder") as string;
     const exerciseIds = (form.get("_exercises") as string)?.split(",") || [];
-    const removedWorkoutIds =
-      (form?.get("_removedWorkoutIds") as string)
+    const removedExerciseIds =
+      (form?.get("_removedExerciseIds") as string)
         ?.split(",")
         ?.filter((id) => !exerciseIds.includes(id)) || [];
 
@@ -106,48 +149,72 @@ export const action: ActionFunction = async ({ request, params }) => {
         status: 401,
       });
     }
-    const currentWorkoutIds = workout.exercises.map((exercise) => exercise.id);
+    const currentExerciseIds = workout.exercises.map((exercise) => exercise.id);
 
-    const newWorkoutIds = exerciseIds.filter((exerciseId) => {
-      return !currentWorkoutIds.includes(exerciseId as string);
+    const newExerciseIds = exerciseIds.filter((exerciseId) => {
+      return !currentExerciseIds.includes(exerciseId as string);
     });
-
-    await db.workout.update({
+    const connectParams: any = {};
+    if (newExerciseIds.length > 0) {
+      connectParams.exercises = {
+        connect: newExerciseIds
+          .filter((id) => id)
+          .map((id) => {
+            return { id: id as string };
+          }),
+        disconnect: removedExerciseIds.map((id) => {
+          return { id: id as string };
+        }),
+      };
+    }
+    const payload = {
       where: { id: params.workoutId },
       data: {
         name,
         exerciseOrder: JSON.parse(exerciseOrder),
-        exercises: {
-          connect: newWorkoutIds.map((id) => {
-            return { id: id as string };
-          }),
-          disconnect: removedWorkoutIds.map((id) => {
-            return { id: id as string };
-          }),
-        },
+        ...connectParams,
       },
-    });
+    };
+    await db.workout.update(payload);
     return { form: "patch", status: 200 };
   }
 };
 
-export default function RoutineRoute() {
+export default function WorkoutRoute() {
   const data = useLoaderData<LoaderData>();
-  console.log("data")
-  console.log(data)
+  const actionData = useActionData<ActionData>();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteExerciseModal, setShowDeleteExerciseModal] =
+    useState<boolean>(false);
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
+  const revalidator = useRevalidator();
+
+  // run when you need to update
+
+  useEffect(() => {
+    if (actionData?.status === 200 && actionData?.type === "delete-exercise") {
+      setShowDeleteExerciseModal(false);
+      revalidator.revalidate();
+    }
+  }, [actionData]);
 
   return (
-    <WorkoutDisplay
-      workout={data.workout}
-      isOwner={data.isOwner}
-      exercises={data.exercises}
-      showAddExerciseModal={showAddExerciseModal}
-      setShowAddExerciseModal={setShowAddExerciseModal}
-      showDeleteModal={showDeleteModal}
-      setShowDeleteModal={setShowDeleteModal}
-    />
+    <div className="container form-container">
+      <WorkoutDisplay
+        workout={data.workout}
+        isOwner={data.isOwner}
+        exercises={data.exercises}
+        showAddExerciseModal={showAddExerciseModal}
+        setShowAddExerciseModal={setShowAddExerciseModal}
+        showDeleteModal={showDeleteModal}
+        setShowDeleteModal={setShowDeleteModal}
+        setShowDeleteExerciseModal={setShowDeleteExerciseModal}
+        showDeleteExerciseModal={showDeleteExerciseModal}
+      />
+      <Link to={`/workouts/${data.workout.id}/start`}>
+        <button className="button w-100">Start workout</button>
+      </Link>
+    </div>
   );
 }
 

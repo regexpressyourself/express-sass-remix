@@ -1,13 +1,18 @@
 import type { Exercise } from "@prisma/client";
-import { useEffect, useState } from "react";
-import type { ActionFunction, LoaderFunction, MetaFunction } from "remix";
 import {
   redirect,
+  type ActionFunction,
+  type LoaderFunction,
+  type MetaFunction,
+} from "@remix-run/node";
+import {
   useActionData,
   useCatch,
   useLoaderData,
   useParams,
-} from "remix";
+  useRevalidator,
+} from "@remix-run/react";
+import { useState } from "react";
 import { ExerciseDisplay } from "~/components/exercise/exercise";
 import { db } from "~/utils/db.server";
 import { getUserId, requireUserId } from "~/utils/session.server";
@@ -29,11 +34,17 @@ export const meta: MetaFunction = ({
   };
 };
 
-type LoaderData = { exercise: Exercise; isOwner: boolean };
-type ActionData = { status?: number; form?: string };
+type LoaderData = {
+  exercise: Exercise;
+  isOwner: boolean;
+};
+type ActionData = {
+  type?: string;
+  status?: number;
+};
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const userId = await getUserId(request);
+  const userId = (await getUserId(request)) as string;
 
   const exercise = await db.exercise.findUnique({
     where: { id: params.exerciseId },
@@ -52,10 +63,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 export const action: ActionFunction = async ({ request, params }) => {
   const form = await request.formData();
-  if (form.get("_method") === "delete") {
+
+  if (form.get("_method") === "delete-exercise") {
     const userId = await requireUserId(request);
+    const id = form.get("_id") as string;
     const exercise = await db.exercise.findUnique({
-      where: { id: params.exerciseId },
+      where: { id },
     });
     if (!exercise) {
       throw new Response("Can't delete what does not exist", { status: 404 });
@@ -65,11 +78,14 @@ export const action: ActionFunction = async ({ request, params }) => {
         status: 401,
       });
     }
-    await db.exercise.delete({ where: { id: params.exerciseId } });
+    await db.exercise.delete({ where: { id } });
     return redirect(`/exercises`);
-  } else if (form.get("_method") === "patch") {
-    const name = form.get("name") as string;
+  }
+
+  if (form.get("_method") === "patch") {
     const userId = await requireUserId(request);
+
+    const name = form.get("name") as string;
     const exercise = await db.exercise.findUnique({
       where: { id: params.exerciseId },
     });
@@ -84,11 +100,13 @@ export const action: ActionFunction = async ({ request, params }) => {
         status: 401,
       });
     }
-
-    await db.exercise.update({
+    const payload = {
       where: { id: params.exerciseId },
-      data: { name },
-    });
+      data: {
+        name,
+      },
+    };
+    await db.exercise.update(payload);
     return { form: "patch", status: 200 };
   }
 };
@@ -96,25 +114,17 @@ export const action: ActionFunction = async ({ request, params }) => {
 export default function ExerciseRoute() {
   const data = useLoaderData<LoaderData>();
   const actionData = useActionData<ActionData>();
-  console.log("actionData");
-  console.log(actionData);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const revalidator = useRevalidator();
 
-  useEffect(() => {
-    if (actionData?.status === 200 && actionData?.form === "patch") {
-      setShowEditModal(false);
-    }
-  }, [actionData]);
+  // run when you need to update
 
   return (
     <ExerciseDisplay
-      showEditModal={showEditModal}
-      showDeleteModal={showDeleteModal}
-      setShowEditModal={setShowEditModal}
-      setShowDeleteModal={setShowDeleteModal}
       exercise={data.exercise}
       isOwner={data.isOwner}
+      showDeleteModal={showDeleteModal}
+      setShowDeleteModal={setShowDeleteModal}
     />
   );
 }

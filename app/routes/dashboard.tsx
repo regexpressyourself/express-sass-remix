@@ -1,8 +1,15 @@
-import type { LinksFunction, LoaderFunction } from "remix";
-import { Link, Outlet, useLoaderData } from "remix";
+import {
+  redirect,
+  type LinksFunction,
+  type LoaderFunction,
+} from "@remix-run/node";
+import { Link, Outlet, useLoaderData } from "@remix-run/react";
+import { useState } from "react";
+import ExerciseList from "~/components/dashboard/exercise-list";
+import WorkoutList from "~/components/dashboard/workout-list";
 import Nav from "~/components/nav";
+import stylesUrl from "~/styles/dash-item.css";
 import mainStylesUrl from "~/styles/main.css";
-import stylesUrl from "~/styles/routines.css";
 import { db } from "~/utils/db.server";
 import { getUser } from "~/utils/session.server";
 
@@ -21,19 +28,26 @@ type LoaderData = {
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
+  const user = await getUser(request);
+  if (!user) {
+    return redirect("/login");
+  }
+
   const routineListItems = await db.routine.findMany({
+    where: { routineUser: user.id },
     orderBy: { createdAt: "desc" },
     select: { id: true, name: true },
   });
   const workoutListItems = await db.workout.findMany({
+    where: { workoutUser: user.id },
     orderBy: { createdAt: "desc" },
     select: { id: true, name: true },
   });
   const exerciseListItems = await db.exercise.findMany({
+    where: { exerciseUser: user.id },
     orderBy: { createdAt: "desc" },
     select: { id: true, name: true },
   });
-  const user = await getUser(request);
 
   const data: LoaderData = {
     routineListItems,
@@ -44,55 +58,52 @@ export const loader: LoaderFunction = async ({ request }) => {
   return data;
 };
 
-export default function RoutinesRoute() {
+export default function DashboardRoute() {
   const data = useLoaderData<LoaderData>();
   const { user } = data;
+  const [showWorkouts, setShowWorkouts] = useState(false);
+  const [showExercises, setShowExercises] = useState(false);
 
   return (
-    <div className="routines-layout">
+    <div className="dash-item-layout">
       <Nav user={user} />
-      <main className="routines-main">
+      <main className="dash-item-main">
         <div className="container">
-          <div className="routines-list">
-            <p>Here are your routines:</p>
-            <ul>
-              {data.routineListItems.map((routine) => (
-                <li key={routine.id}>
-                  <Link to={`/routines/${routine.id}`}>{routine.name}</Link>
-                </li>
-              ))}
-            </ul>
+          <div className="dash-item-list">
+            <h2>Routines:</h2>
             <Link to="/routines/new" className="button">
               Add Routine
             </Link>
+            {data.routineListItems.map((routine) => (
+              <div key={routine.id}>
+                <div className="routine-item" key={routine.id}>
+                  <Link to={`/routines/${routine.id}`}>{routine.name}</Link>
+                </div>
+                <hr />
+              </div>
+            ))}
           </div>
-          <div className="routines-list">
-            <p>Here are your workouts:</p>
-            <ul>
-              {data.workoutListItems.map((workout) => (
-                <li key={workout.id}>
-                  <Link to={`/workouts/${workout.id}`}>{workout.name}</Link>
-                </li>
-              ))}
-            </ul>
-            <Link to="/workouts/new" className="button">
-              Add Workout
-            </Link>
-          </div>
-          <div className="routines-list">
-            <p>Here are your exercises:</p>
-            <ul>
-              {data.exerciseListItems.map((exercise) => (
-                <li key={exercise.id}>
-                  <Link to={`/exercises/${exercise.id}`}>{exercise.name}</Link>
-                </li>
-              ))}
-            </ul>
-            <Link to="/exercises/new" className="button">
-              Add Exercise
-            </Link>
-          </div>
-          <div className="routines-outlet">
+          {showWorkouts ? (
+            <WorkoutList
+              setShowWorkouts={setShowWorkouts}
+              workoutListItems={data.workoutListItems}
+            />
+          ) : (
+            <button className="button" onClick={() => setShowWorkouts(true)}>
+              Show workouts
+            </button>
+          )}
+          {showExercises ? (
+            <ExerciseList
+              setShowExercises={setShowExercises}
+              exerciseListItems={data.exerciseListItems}
+            />
+          ) : (
+            <button className="button" onClick={() => setShowExercises(true)}>
+              Show exercises
+            </button>
+          )}
+          <div className="dash-item-outlet">
             <Outlet />
           </div>
         </div>

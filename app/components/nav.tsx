@@ -1,4 +1,4 @@
-import { Form, Link } from "remix";
+import { Form, Link } from "@remix-run/react";
 import { getUser } from "~/utils/session.server";
 
 export default function Nav({

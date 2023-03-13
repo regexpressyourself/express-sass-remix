@@ -1,13 +1,5 @@
-import type { ActionFunction, LoaderFunction } from "remix";
-import {
-  Form,
-  json,
-  Link,
-  redirect,
-  useActionData,
-  useCatch,
-  useTransition,
-} from "remix";
+import { type ActionFunction, type LoaderFunction, json, redirect } from "@remix-run/node";
+import { Form, Link, useActionData, useCatch, useTransition } from "@remix-run/react";
 import { RoutineDisplay } from "~/components/routine/routine";
 import { db } from "~/utils/db.server";
 import { getUserId, requireUserId } from "~/utils/session.server";

@@ -1,8 +1,8 @@
-import type { LinksFunction, LoaderFunction } from "remix";
-import { Outlet, redirect, useLoaderData } from "remix";
+import { type LinksFunction, type LoaderFunction, redirect } from "@remix-run/node";
+import { Outlet, useLoaderData } from "@remix-run/react";
 import Nav from "~/components/nav";
 import mainStylesUrl from "~/styles/main.css";
-import stylesUrl from "~/styles/workouts.css";
+import stylesUrl from "~/styles/dash-item.css";
 import { getUser } from "~/utils/session.server";
 
 export const links: LinksFunction = () => {
@@ -30,9 +30,9 @@ export default function WorkoutsRoute() {
   const loaderData = useLoaderData<LoaderData>();
   const { user } = loaderData;
   return (
-    <>
+    <main className="main">
       <Nav user={user} />
       <Outlet></Outlet>
-    </>
+    </main>
   );
 }

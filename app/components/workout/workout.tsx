@@ -1,10 +1,9 @@
 import type { Exercise } from "@prisma/client";
-import { useSubmit } from "@remix-run/react";
+import { Form, Link, useSubmit } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { ActionMeta, MultiValue } from "react-select";
-import { Form, Link } from "remix";
 import type { WorkoutWithExercises } from "~/types/db-includes";
 import type {
   ExerciseList,
@@ -14,6 +13,7 @@ import type {
 import { List } from "../list";
 import { AddExerciseToWorkout } from "./add-exercise-to-workout";
 import { DeleteWorkout } from "./delete-workout";
+import { UnlinkExercise } from "./unlink-exercise";
 
 export function WorkoutDisplay({
   workout,
@@ -25,6 +25,8 @@ export function WorkoutDisplay({
   setShowDeleteModal,
   setShowAddExerciseModal,
   showAddExerciseModal,
+  setShowDeleteExerciseModal,
+  showDeleteExerciseModal,
 }: {
   workout: WorkoutWithExercises;
   exercises: Exercise[];
@@ -33,10 +35,15 @@ export function WorkoutDisplay({
   canEdit?: boolean;
   showDeleteModal?: boolean;
   showAddExerciseModal?: boolean;
+  showDeleteExerciseModal?: boolean;
   setShowDeleteModal: (value: boolean) => void;
   setShowAddExerciseModal: (value: boolean) => void;
+  setShowDeleteExerciseModal: (value: boolean) => void;
 }) {
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(
+    null
+  );
   const [exerciseOrder, setExerciseOrder] = useState<ExerciseOrder>(
     (workout.exerciseOrder as ExerciseOrder) || {}
   );
@@ -47,7 +54,7 @@ export function WorkoutDisplay({
     ExerciseList[]
   >([]);
   const [excludedExercises, setExcludedExercises] = useState<Exercise[]>([]);
-  const [inlcudedExercises, setIncludedExercises] = useState<
+  const [includedExercises, setIncludedExercises] = useState<
     (Exercise | ExerciseList)[]
   >([]);
 
@@ -62,7 +69,7 @@ export function WorkoutDisplay({
     const nextCurrentExercisesSelect: ExerciseSelect[] = [
       ...currentExercisesSelect,
     ];
-    const nextCurrentExercisesList: ExerciseList[] = [...currentExercisesList];
+    const nextCurrentExercisesList: ExerciseList[] = [];
 
     workout?.exercises.forEach((exercise: Exercise) => {
       nextCurrentExercisesSelect[exerciseOrder[exercise.id]] = {
@@ -90,7 +97,7 @@ export function WorkoutDisplay({
   }, [workout, exercises]);
 
   return (
-    <div className="container form-container">
+    <>
       <div className="item-header">
         <h1>
           <Link to=".">{workout.name}</Link>
@@ -114,7 +121,7 @@ export function WorkoutDisplay({
           <input
             type="hidden"
             name="_exercises"
-            value={inlcudedExercises.map((exercise) => exercise.id)}
+            value={includedExercises.map((exercise) => exercise.id)}
           />
           <input
             type="hidden"
@@ -136,6 +143,12 @@ export function WorkoutDisplay({
           {currentExercisesList.length > 0 ? (
             <DndProvider backend={HTML5Backend}>
               <List
+                onDelete={(id: string) => {
+                  setExerciseToDelete(
+                    exercises.find((exercise) => exercise.id === id) || null
+                  );
+                  setShowDeleteExerciseModal(true);
+                }}
                 order={exerciseOrder}
                 onChange={() => {
                   if (form?.current) {
@@ -185,7 +198,7 @@ export function WorkoutDisplay({
                 const nextExerciseOrders: { [id: string]: number } = {};
                 chosenExercises.forEach((exercise, i) => {
                   nextExerciseOrders[exercise.id] =
-                    inlcudedExercises.length + i;
+                    includedExercises.length + i;
                 });
 
                 const nextExcludedExercises = [
@@ -196,7 +209,7 @@ export function WorkoutDisplay({
 
                 setExerciseOrder({ ...exerciseOrder, ...nextExerciseOrders });
                 setIncludedExercises([
-                  ...inlcudedExercises,
+                  ...includedExercises,
                   ...chosenExercises,
                 ]);
                 setExcludedExercises(nextExcludedExercises);
@@ -223,6 +236,16 @@ export function WorkoutDisplay({
           setShowDeleteModal={setShowDeleteModal}
         />
       ) : null}
-    </div>
+      {showDeleteExerciseModal ? (
+        <UnlinkExercise
+          exercise={exerciseToDelete}
+          workoutName={workout.name}
+          isOwner={isOwner}
+          canDelete={canDelete}
+          display={showDeleteExerciseModal}
+          setShowDeleteModal={setShowDeleteExerciseModal}
+        />
+      ) : null}
+    </>
   );
 }

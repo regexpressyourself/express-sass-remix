@@ -1,7 +1,7 @@
 import type { Workout } from "@prisma/client";
 import { useEffect, useRef } from "react";
 import { X } from "react-feather";
-import { Form } from "remix";
+import { Form } from "@remix-run/react";
 
 export function DeleteWorkout({
   workout,
@@ -10,7 +10,7 @@ export function DeleteWorkout({
   display = false,
   setShowDeleteModal,
 }: {
-  workout: Workout | null;
+  workout: Workout;
   isOwner: boolean;
   canDelete?: boolean;
   display?: boolean;
@@ -42,12 +42,12 @@ export function DeleteWorkout({
         >
           <X />
         </button>
-        <h2>Delete {workout?.name}?</h2>
+        <h2>Delete {workout.name}?</h2>
         <div className="content">
           {isOwner ? (
             <Form method="post">
               <input type="hidden" name="_method" value="delete-workout" />
-              <input type="hidden" name="_id" value={workout?.id} />
+              <input type="hidden" name="_id" value={workout.id} />
               <button
                 type="submit"
                 className="button modal-action danger"

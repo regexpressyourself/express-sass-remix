@@ -1,5 +1,5 @@
-import type { LinksFunction, MetaFunction } from "remix";
-import { Links, LiveReload, Outlet, useCatch, Meta, Scripts } from "remix";
+import { type LinksFunction, type MetaFunction } from "@remix-run/node";
+import { Links, LiveReload, Meta, Outlet, Scripts, useCatch } from "@remix-run/react";
 import globalStylesUrl from "./styles/global.css";
 import globalMediumStylesUrl from "./styles/global-medium.css";
 import globalLargeStylesUrl from "./styles/global-large.css";

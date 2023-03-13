@@ -1,8 +1,8 @@
-import type { LinksFunction, LoaderFunction } from "remix";
-import { Outlet, redirect, useLoaderData } from "remix";
+import { type LinksFunction, type LoaderFunction, redirect } from "@remix-run/node";
+import { Outlet, useLoaderData } from "@remix-run/react";
 import Nav from "~/components/nav";
 import mainStylesUrl from "~/styles/main.css";
-import stylesUrl from "~/styles/routines.css";
+import stylesUrl from "~/styles/dash-item.css";
 import { getUser } from "~/utils/session.server";
 
 export const links: LinksFunction = () => {

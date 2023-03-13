@@ -1,7 +1,8 @@
+import { Link } from "@remix-run/react";
 import type { FC } from "react";
 import { memo } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { X } from "react-feather";
+import { Menu, X } from "react-feather";
 import { ItemTypes } from "./item-types";
 
 export interface CardProps {
@@ -59,7 +60,10 @@ export const Card: FC<CardProps> = memo(function Card({
   const opacity = isDragging ? 0 : 1;
   return (
     <div ref={(node) => drag(drop(node))} className="card" style={{ opacity }}>
-      {text}{" "}
+      <span>
+        <Menu />
+        <Link to={`/exercises/${id}`}>{text}</Link>
+      </span>{" "}
       <button
         className="card-x"
         onClick={() => {

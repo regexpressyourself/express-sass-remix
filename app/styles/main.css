@@ -90,7 +90,7 @@ main.main {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: var(--color-semitrans-white);
 }
 
 .modal {
@@ -103,15 +103,26 @@ main.main {
   right: 1rem;
   padding: 2rem;
   background-color: var(--color-background);
-}
-.modal .content {
-  position: absolute;
-  left: 2rem;
-  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .modal button.modal-action {
   width: 100%;
-  margin-top: 50%;
+  margin-top: 1rem;
+}
+.modal .add-or-update-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-top: 1rem;
+}
+.modal .add-or-update-action > *:first-child {
+  flex-basis: 5%;
+}
+.modal .add-or-update-action > *:last-child {
+  flex-basis: 60%;
 }
 .modal.confirmation-modal {
   top: 50%;
@@ -146,6 +157,24 @@ main.main {
   margin-bottom: 0.5rem;
   background-color: white;
   cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dnd-list .card span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dnd-list .card span svg {
+  margin-right: 1rem;
+}
+.dnd-list .card .card-x {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent;
 }
 
 .add-list-button {
@@ -163,6 +192,23 @@ main.main {
   font-size: 1rem;
 }
 
+.routines-list {
+  width: 100%;
+}
+.routines-list hr {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.routine-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.set-select,
+.exercise-select,
 .workout-select {
   color: var(--color-background);
 }

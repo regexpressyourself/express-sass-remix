@@ -1,67 +1,69 @@
 import type { Exercise } from "@prisma/client";
-import { Link } from "remix";
+import { Form, Link, useSubmit } from "@remix-run/react";
+import { useRef } from "react";
 import { DeleteExercise } from "./delete-exercise";
-import { EditExercise } from "./edit-exercise";
 
 export function ExerciseDisplay({
   exercise,
   isOwner,
   canDelete = true,
-  showEditModal,
   showDeleteModal,
-  setShowEditModal,
   setShowDeleteModal,
 }: {
-  exercise: Pick<Exercise, "name">;
+  exercise: Exercise | {name: string;};
   isOwner: boolean;
   canDelete?: boolean;
-  showEditModal?: boolean;
   showDeleteModal?: boolean;
-  setShowEditModal?: (value: boolean) => void;
-  setShowDeleteModal?: (value: boolean) => void;
+  setShowDeleteModal: (value: boolean) => void;
 }) {
+  const submit = useSubmit();
+  const form = useRef<HTMLFormElement>(null);
+
   return (
-    <div className="container">
-      <p>Here's your exercise:</p>
-      <Link to=".">{exercise.name}</Link>
-      <div>
+    <div className="container form-container">
+      <div className="item-header">
+        <h1>
+          <Link to=".">{exercise.name}</Link>
+        </h1>
+
         {isOwner && setShowDeleteModal ? (
           <button
             type="submit"
-            className="button"
+            className="button danger w-100"
             disabled={!canDelete}
             onClick={() => setShowDeleteModal(true)}
           >
-            Delete
+            Delete Exercise
           </button>
         ) : null}
       </div>
-      <div>
-        {isOwner && setShowEditModal ? (
-          <button
-            type="submit"
-            className="button"
-            disabled={!canDelete}
-            onClick={() => setShowEditModal(true)}
-          >
-            Edit
-          </button>
-        ) : null}
-      </div>
+      {isOwner ? (
+        <Form method="post" ref={form}>
+          <input type="hidden" name="_method" value="patch" />
+          <label htmlFor="name">Exercise Name</label>
+          <input
+            type="text"
+            name="name"
+            onBlur={() => {
+              if (form?.current) {
+                submit(form.current, { replace: true });
+              }
+            }}
+            id="name"
+            defaultValue={exercise.name}
+          />
+        </Form>
+      ) : null}
+      <br />
+      <br />
+
       {showDeleteModal ? (
         <DeleteExercise
           exercise={exercise}
           isOwner={isOwner}
           canDelete={canDelete}
           display={showDeleteModal}
-        />
-      ) : null}
-      {showEditModal ? (
-        <EditExercise
-          exerciseName={exercise.name}
-          isOwner={isOwner}
-          canEdit={canDelete}
-          display={showEditModal}
+          setShowDeleteModal={setShowDeleteModal}
         />
       ) : null}
     </div>

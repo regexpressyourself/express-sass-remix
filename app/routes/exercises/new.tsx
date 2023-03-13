@@ -1,13 +1,16 @@
-import type { ActionFunction, LoaderFunction } from "remix";
+import {
+  json,
+  redirect,
+  type ActionFunction,
+  type LoaderFunction,
+} from "@remix-run/node";
 import {
   Form,
-  json,
   Link,
-  redirect,
   useActionData,
   useCatch,
   useTransition,
-} from "remix";
+} from "@remix-run/react";
 import { ExerciseDisplay } from "~/components/exercise/exercise";
 import { db } from "~/utils/db.server";
 import { getUserId, requireUserId } from "~/utils/session.server";
@@ -39,6 +42,8 @@ type ActionData = {
 const badRequest = (data: ActionData) => json(data, { status: 400 });
 
 export const action: ActionFunction = async ({ request }) => {
+  const searchParams = new URL(request.url).searchParams;
+  const redirectTo = searchParams.get("redirectTo");
   const userId = await requireUserId(request);
   const form = await request.formData();
   const name = form.get("name");
@@ -59,7 +64,9 @@ export const action: ActionFunction = async ({ request }) => {
   const exercise = await db.exercise.create({
     data: { ...fields, exerciseUser: userId },
   });
-  return redirect(`/exercises/${exercise.id}`);
+  return redirectTo
+    ? redirect(redirectTo)
+    : redirect(`/exercises/${exercise.id}`);
 };
 
 export default function NewExerciseRoute() {
@@ -70,7 +77,12 @@ export default function NewExerciseRoute() {
     const name = transition.submission.formData.get("name");
     if (typeof name === "string" && !validateExerciseName(name)) {
       return (
-        <ExerciseDisplay exercise={{ name }} isOwner={true} canDelete={false} />
+        <ExerciseDisplay
+          exercise={{ name }}
+          isOwner={true}
+          canDelete={false}
+          setShowDeleteModal={() => null}
+        />
       );
     }
   }
@@ -105,7 +117,7 @@ export default function NewExerciseRoute() {
         </div>
       </Form>
     </div>
-  )
+  );
 }
 
 export function CatchBoundary() {

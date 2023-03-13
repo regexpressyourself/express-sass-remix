@@ -1,0 +1,41 @@
+.exercise-item {
+  padding: 0 0 2rem;
+}
+
+.set-item {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+.set-item > *:not(.update-set-form) {
+  flex-basis: 20%;
+}
+.set-item > span.set-num {
+  flex-basis: 40%;
+  padding-right: 0.33rem;
+  min-width: 3.5rem;
+}
+.set-item > span.set-num strong {
+  font-size: 0.66rem;
+}
+.set-item .button {
+  padding: 0.25rem;
+  margin: 0 0 0 1rem;
+}
+.set-item .button.danger {
+  margin: 0 1rem 0 0;
+}
+.set-item .delete-set-form {
+  padding: 0 1rem;
+  align-items: flex-end;
+}
+.set-item form {
+  width: unset;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-direction: row;
+}
+
+/*# sourceMappingURL=start-workout.css.map */

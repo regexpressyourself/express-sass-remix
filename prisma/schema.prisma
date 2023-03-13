@@ -17,7 +17,7 @@ model User {
   exercises    Exercise[]
   workouts     Workout[]
   routines     Routine[]
-  sets         Set[]
+  sets         WorkoutSet[]
   phone        String?    @unique
   username     String     @unique
   passwordHash String
@@ -30,7 +30,9 @@ model Routine {
   routineUser String
   user        User                 @relation(fields: [routineUser], references: [id], onDelete: Cascade)
   workouts    Workout[]
+  exercises Exercise[]
   workoutOrder Json?
+  exerciseOrder Json?
   name        String
 }
 
@@ -40,14 +42,15 @@ model Workout {
   updatedAt   DateTime              @updatedAt
   workoutUser String
   user        User                  @relation(fields: [workoutUser], references: [id], onDelete: Cascade)
-  routines    Routine[]
+  workoutRoutine String
+  routine    Routine @relation(fields: [workoutRoutine], references: [id], onDelete: Cascade)
   exercises   Exercise[]
   exerciseOrder Json?
-  sets        Set[]
+  sets        WorkoutSet[]
   name        String
 }
 
-model Set {
+model WorkoutSet {
   id          String   @id @default(uuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -57,9 +60,10 @@ model Set {
   exercise    Exercise @relation(fields: [setExercise], references: [id])
   setUser     String
   user        User     @relation(fields: [setUser], references: [id], onDelete: Cascade)
+  isComplete Boolean @default(false)
   setNum      Int
-  reps        Int
-  weight      Float
+  reps        Int?
+  weight      Float?
 }
 
 model Exercise {
@@ -70,37 +74,10 @@ model Exercise {
   user         User                  @relation(fields: [exerciseUser], references: [id], onDelete: Cascade)
   name         String
   workouts     Workout[]
+  routines Routine[]
   notes        String?
   links        String?
-  sets         Set[]
+  sets         WorkoutSet[]
 }
 
-
-
-
-//model RoutinesOnWorkouts {
-  //routine   Routine @relation(fields: [routineId], references: [id])
-  //routineId String
-
-  //workout   Workout @relation(fields: [workoutId], references: [id])
-  //workoutId String
-
-  //assignedAt DateTime @default(now())
-  //assignedBy String
-
-  //@@id([routineId, workoutId])
-//}
-
-//model WorkoutsOnExercises {
-  //exercise   Exercise @relation(fields: [exerciseId], references: [id])
-  //exerciseId String
-
-  //workout   Workout @relation(fields: [workoutId], references: [id])
-  //workoutId String
-
-  //assignedAt DateTime @default(now())
-  //assignedBy String
-
-  //@@id([exerciseId, workoutId])
-//}
 

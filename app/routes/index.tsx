@@ -1,5 +1,5 @@
-import type { LinksFunction, LoaderFunction, MetaFunction } from "remix";
-import { Link, redirect } from "remix";
+import { type LinksFunction, type LoaderFunction, type MetaFunction, redirect } from "@remix-run/node";
+import { Link } from "@remix-run/react";
 import stylesUrl from "~/styles/index.css";
 import mainStylesUrl from "~/styles/main.css";
 import { getUserId } from "~/utils/session.server";

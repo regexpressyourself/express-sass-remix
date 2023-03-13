@@ -1,14 +1,17 @@
-import type { ActionFunction, LoaderFunction } from "remix";
+import {
+  json,
+  redirect,
+  type ActionFunction,
+  type LoaderFunction,
+} from "@remix-run/node";
 import {
   Form,
-  json,
   Link,
-  redirect,
   useActionData,
   useCatch,
   useTransition,
-} from "remix";
-import { RoutineDisplay } from "~/components/routine/routine";
+} from "@remix-run/react";
+import { WorkoutDisplay } from "~/components/workout/workout";
 import { db } from "~/utils/db.server";
 import { getUserId, requireUserId } from "~/utils/session.server";
 
@@ -20,9 +23,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   return {};
 };
 
-function validateRoutineName(name: string) {
+function validateWorkoutName(name: string) {
   if (name.length < 2) {
-    return `That routine's name is too short`;
+    return `That workout's name is too short`;
   }
 }
 
@@ -39,6 +42,8 @@ type ActionData = {
 const badRequest = (data: ActionData) => json(data, { status: 400 });
 
 export const action: ActionFunction = async ({ request }) => {
+  const searchParams = new URL(request.url).searchParams;
+  const redirectTo = searchParams.get("redirectTo");
   const userId = await requireUserId(request);
   const form = await request.formData();
   const name = form.get("name");
@@ -49,35 +54,37 @@ export const action: ActionFunction = async ({ request }) => {
   }
 
   const fieldErrors = {
-    name: validateRoutineName(name),
+    name: validateWorkoutName(name),
   };
   const fields = { name };
   if (Object.values(fieldErrors).some(Boolean)) {
     return badRequest({ fieldErrors, fields });
   }
 
-  const routine = await db.routine.create({
-    data: { ...fields, routineUser: userId },
+  const workout = await db.workout.create({
+    data: { ...fields, workoutUser: userId },
   });
-  return redirect(`/routines/${routine.id}`);
+  return redirectTo
+    ? redirect(redirectTo)
+    : redirect(`/workouts/${workout.id}`);
 };
 
-export default function NewRoutineRoute() {
+export default function NewWorkoutRoute() {
   const actionData = useActionData<ActionData>();
   const transition = useTransition();
 
   if (transition.submission) {
     const name = transition.submission.formData.get("name");
-    if (typeof name === "string" && !validateRoutineName(name)) {
+    if (typeof name === "string" && !validateWorkoutName(name)) {
       return (
-        <RoutineDisplay routine={{ name }} isOwner={true} canDelete={false} />
+        <WorkoutDisplay workout={{ name }} isOwner={true} canDelete={false} />
       );
     }
   }
 
   return (
     <div>
-      <p>Add your routine</p>
+      <p>Add your workout</p>
       <Form method="post">
         <div>
           <label>
@@ -105,7 +112,7 @@ export default function NewRoutineRoute() {
         </div>
       </Form>
     </div>
-  )
+  );
 }
 
 export function CatchBoundary() {
@@ -114,7 +121,7 @@ export function CatchBoundary() {
   if (caught.status === 401) {
     return (
       <div className="error-container">
-        <p>You must be logged in to create a routine.</p>
+        <p>You must be logged in to create a workout.</p>
         <Link to="/login">Login</Link>
       </div>
     );

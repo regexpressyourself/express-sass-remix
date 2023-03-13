@@ -1,102 +1,97 @@
-import type { Workout } from "@prisma/client";
-import { useSubmit } from "@remix-run/react";
+import type { Exercise } from "@prisma/client";
+import { Form, Link, useSubmit } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { ActionMeta, MultiValue } from "react-select";
-import { Form, Link } from "remix";
-import type { RoutineWithWorkouts } from "~/types/db-includes";
-import type { WorkoutList, WorkoutOrder, WorkoutSelect } from "~/types/routine";
+import type { RoutineWithExercises } from "~/types/db-includes";
+import type { ExerciseList, ExerciseOrder, ExerciseSelect } from "~/types/routine";
 import { List } from "../list";
-import { DeleteWorkout } from "../workout/delete-workout";
-import { AddWorkoutToRoutine } from "./add-workout-to-routine";
+import { AddExerciseToRoutine } from "./add-exercise-to-routine";
 import { DeleteRoutine } from "./delete-routine";
+import { UnlinkExercise } from "./unlink-exercise";
 
 export function RoutineDisplay({
   routine,
   isOwner,
-  workouts,
+  exercises,
   canDelete = true,
   canEdit = true,
   showDeleteModal,
   setShowDeleteModal,
-  setShowAddWorkoutModal,
-  showAddWorkoutModal,
-  setShowDeleteWorkoutModal,
-  showDeleteWorkoutModal
+  setShowAddExerciseModal,
+  showAddExerciseModal,
+  setShowDeleteExerciseModal,
+  showDeleteExerciseModal,
 }: {
-  routine: RoutineWithWorkouts;
-  workouts: Workout[];
+  routine: RoutineWithExercises;
+  exercises: Exercise[];
   isOwner: boolean;
   canDelete?: boolean;
   canEdit?: boolean;
   showDeleteModal?: boolean;
-  showAddWorkoutModal?: boolean;
-  showDeleteWorkoutModal?: boolean;
+  showAddExerciseModal?: boolean;
+  showDeleteExerciseModal?: boolean;
   setShowDeleteModal: (value: boolean) => void;
-  setShowAddWorkoutModal: (value: boolean) => void;
-  setShowDeleteWorkoutModal: (value: boolean) => void;
+  setShowAddExerciseModal: (value: boolean) => void;
+  setShowDeleteExerciseModal: (value: boolean) => void;
 }) {
   const [removedIds, setRemovedIds] = useState<string[]>([]);
-  const [workoutToDelete, setWorkoutToDelete] = useState<Workout | null>(null);
-  const [workoutOrder, setWorkoutOrder] = useState<WorkoutOrder>(
-    (routine.workoutOrder as WorkoutOrder) || {}
+  const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
+  const [exerciseOrder, setExerciseOrder] = useState<ExerciseOrder>(
+    (routine.exerciseOrder as ExerciseOrder) || {}
   );
-  const [currentWorkoutsSelect, setCurrentWorkoutsSelect] = useState<
-    WorkoutSelect[]
+  const [currentExercisesSelect, setCurrentExercisesSelect] = useState<
+    ExerciseSelect[]
   >([]);
-  const [currentWorkoutsList, setCurrentWorkoutsList] = useState<WorkoutList[]>(
+  const [currentExercisesList, setCurrentExercisesList] = useState<ExerciseList[]>(
     []
   );
-  const [excludedWorkouts, setExcludedWorkouts] = useState<Workout[]>([]);
-  console.log("excludedWorkouts");
-  console.log(excludedWorkouts);
-  const [includedWorkouts, setIncludedWorkouts] = useState<
-    (Workout | WorkoutList)[]
+  const [excludedExercises, setExcludedExercises] = useState<Exercise[]>([]);
+  const [includedExercises, setIncludedExercises] = useState<
+    (Exercise | ExerciseList)[]
   >([]);
 
-  console.log("includedWorkouts");
-  console.log(includedWorkouts);
   const submit = useSubmit();
   const form = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    const nextIncludedWorkouts: Workout[] = [];
-    const nextExcludedWorkouts: Workout[] = [];
-    const routineWorkouts: { [key: string]: boolean } = {};
+    const nextIncludedExercises: Exercise[] = [];
+    const nextExcludedExercises: Exercise[] = [];
+    const routineExercises: { [key: string]: boolean } = {};
 
-    const nextCurrentWorkoutsSelect: WorkoutSelect[] = [
-      ...currentWorkoutsSelect,
+    const nextCurrentExercisesSelect: ExerciseSelect[] = [
+      ...currentExercisesSelect,
     ];
-    const nextCurrentWorkoutsList: WorkoutList[] = [...currentWorkoutsList];
+    const nextCurrentExercisesList: ExerciseList[] = [];
 
-    routine?.workouts.forEach((workout: Workout) => {
-      nextCurrentWorkoutsSelect[workoutOrder[workout.id]] = {
-        value: workout.id,
-        label: workout.name,
+    routine?.exercises.forEach((exercise: Exercise) => {
+      nextCurrentExercisesSelect[exerciseOrder[exercise.id]] = {
+        value: exercise.id,
+        label: exercise.name,
       };
-      nextCurrentWorkoutsList[workoutOrder[workout.id]] = {
-        id: workout.id,
-        text: workout.name,
+      nextCurrentExercisesList[exerciseOrder[exercise.id]] = {
+        id: exercise.id,
+        text: exercise.name,
       };
-      nextIncludedWorkouts.push(workout);
-      routineWorkouts[workout.id] = true;
+      nextIncludedExercises.push(exercise);
+      routineExercises[exercise.id] = true;
     });
 
-    workouts.forEach((workout) => {
-      if (!routineWorkouts[workout.id]) {
-        nextExcludedWorkouts.push(workout);
+    exercises.forEach((exercise) => {
+      if (!routineExercises[exercise.id]) {
+        nextExcludedExercises.push(exercise);
       }
     });
 
-    setIncludedWorkouts(nextIncludedWorkouts);
-    setExcludedWorkouts(nextExcludedWorkouts);
-    setCurrentWorkoutsList(nextCurrentWorkoutsList);
-    setCurrentWorkoutsSelect(nextCurrentWorkoutsSelect);
-  }, [routine, workouts]);
+    setIncludedExercises(nextIncludedExercises);
+    setExcludedExercises(nextExcludedExercises);
+    setCurrentExercisesList(nextCurrentExercisesList);
+    setCurrentExercisesSelect(nextCurrentExercisesSelect);
+  }, [routine, exercises]);
 
   return (
-    <div className="container form-container">
+    <>
       <div className="item-header">
         <h1>
           <Link to=".">{routine.name}</Link>
@@ -116,16 +111,16 @@ export function RoutineDisplay({
       {isOwner ? (
         <Form method="post" ref={form}>
           <input type="hidden" name="_method" value="patch" />
-          <input type="hidden" name="_removedWorkoutIds" value={removedIds} />
+          <input type="hidden" name="_removedExerciseIds" value={removedIds} />
           <input
             type="hidden"
-            name="_workouts"
-            value={includedWorkouts.map((workout) => workout.id)}
+            name="_exercises"
+            value={includedExercises.map((exercise) => exercise.id)}
           />
           <input
             type="hidden"
-            name="_workoutOrder"
-            value={JSON.stringify(workoutOrder)}
+            name="_exerciseOrder"
+            value={JSON.stringify(exerciseOrder)}
           />
           <label htmlFor="name">Routine Name</label>
           <input
@@ -139,83 +134,83 @@ export function RoutineDisplay({
             id="name"
             defaultValue={routine.name}
           />
-          {currentWorkoutsList.length > 0 ? (
+          {currentExercisesList.length > 0 ? (
             <DndProvider backend={HTML5Backend}>
               <List
                 onDelete={(id: string) => {
-                  setWorkoutToDelete(
-                    workouts.find((workout) => workout.id === id) || null
+                  setExerciseToDelete(
+                    exercises.find((exercise) => exercise.id === id) || null
                   );
-                  setShowDeleteWorkoutModal(true);
+                  setShowDeleteExerciseModal(true);
                 }}
-                order={workoutOrder}
+                order={exerciseOrder}
                 onChange={() => {
                   if (form?.current) {
                     submit(form.current, { replace: true });
                   }
                 }}
-                setOrder={setWorkoutOrder}
-                items={currentWorkoutsList}
+                setOrder={setExerciseOrder}
+                items={currentExercisesList}
               />
             </DndProvider>
           ) : null}
 
           <button
-            onClick={() => setShowAddWorkoutModal(true)}
+            onClick={() => setShowAddExerciseModal(true)}
             className="button info add-list-button w-100"
             type="button"
             disabled={!canEdit}
           >
-            Add Workout
+            Add Exercise
           </button>
 
-          <AddWorkoutToRoutine
-            options={excludedWorkouts.map((workout) => ({
-              label: workout.name,
-              value: workout.id,
+          <AddExerciseToRoutine
+            options={excludedExercises.map((exercise) => ({
+              label: exercise.name,
+              value: exercise.id,
             }))}
             onChange={(
-              event: MultiValue<WorkoutSelect>,
-              action: ActionMeta<WorkoutSelect>
+              event: MultiValue<ExerciseSelect>,
+              action: ActionMeta<ExerciseSelect>
             ) => {
               if (
                 action.action === "remove-value" &&
                 action?.removedValue?.value
               ) {
                 setRemovedIds([...removedIds, action.removedValue.value]);
-                setIncludedWorkouts([]);
+                setIncludedExercises([]);
               } else if (
                 action?.option?.value &&
                 action.action === "select-option"
               ) {
-                const chosenWorkouts = excludedWorkouts
-                  .filter((workout) => workout.id === action?.option?.value)
-                  .map((workout) => {
-                    return { id: workout.id, text: workout.name };
+                const chosenExercises = excludedExercises
+                  .filter((exercise) => exercise.id === action?.option?.value)
+                  .map((exercise) => {
+                    return { id: exercise.id, text: exercise.name };
                   });
 
-                const nextWorkoutOrders: { [id: string]: number } = {};
-                chosenWorkouts.forEach((workout, i) => {
-                  nextWorkoutOrders[workout.id] = includedWorkouts.length + i;
+                const nextExerciseOrders: { [id: string]: number } = {};
+                chosenExercises.forEach((exercise, i) => {
+                  nextExerciseOrders[exercise.id] = includedExercises.length + i;
                 });
 
-                const nextExcludedWorkouts = [
-                  ...excludedWorkouts.filter(
-                    (workout) => workout.id !== action?.option?.value
+                const nextExcludedExercises = [
+                  ...excludedExercises.filter(
+                    (exercise) => exercise.id !== action?.option?.value
                   ),
                 ];
 
-                setWorkoutOrder({ ...workoutOrder, ...nextWorkoutOrders });
-                setIncludedWorkouts([...includedWorkouts, ...chosenWorkouts]);
-                setExcludedWorkouts(nextExcludedWorkouts);
-                setCurrentWorkoutsList([
-                  ...currentWorkoutsList,
-                  ...chosenWorkouts,
+                setExerciseOrder({ ...exerciseOrder, ...nextExerciseOrders });
+                setIncludedExercises([...includedExercises, ...chosenExercises]);
+                setExcludedExercises(nextExcludedExercises);
+                setCurrentExercisesList([
+                  ...currentExercisesList,
+                  ...chosenExercises,
                 ]);
               }
             }}
-            display={showAddWorkoutModal}
-            setShowAddWorkoutModal={setShowAddWorkoutModal}
+            display={showAddExerciseModal}
+            setShowAddExerciseModal={setShowAddExerciseModal}
           />
         </Form>
       ) : null}
@@ -231,15 +226,16 @@ export function RoutineDisplay({
           setShowDeleteModal={setShowDeleteModal}
         />
       ) : null}
-      {showDeleteWorkoutModal ? (
-        <DeleteWorkout
-          workout={workoutToDelete}
+      {showDeleteExerciseModal ? (
+        <UnlinkExercise
+          exercise={exerciseToDelete}
+          routineName={routine.name}
           isOwner={isOwner}
           canDelete={canDelete}
-          display={showDeleteWorkoutModal}
-          setShowDeleteModal={setShowDeleteWorkoutModal}
+          display={showDeleteExerciseModal}
+          setShowDeleteModal={setShowDeleteExerciseModal}
         />
       ) : null}
-    </div>
+    </>
   );
 }

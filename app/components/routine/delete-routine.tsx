@@ -1,7 +1,7 @@
 import type { Routine } from "@prisma/client";
 import { useEffect, useRef } from "react";
 import { X } from "react-feather";
-import { Form } from "remix";
+import { Form } from "@remix-run/react";
 
 export function DeleteRoutine({
   routine,

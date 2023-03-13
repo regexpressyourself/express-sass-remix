@@ -1,0 +1,38 @@
+.exercise-item {
+  padding: 0 0 2rem;
+}
+.set-item {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  & > *:not(.update-set-form) {
+    flex-basis: 20%;
+  }
+  & > span.set-num {
+    flex-basis: 40%;
+    padding-right: .33rem;
+    min-width: 3.5rem;
+    strong {
+      font-size: .66rem;
+    }
+  }
+  .button {
+    padding: 0.25rem;
+    margin: 0 0 0 1rem;
+    &.danger {
+      margin: 0 1rem 0 0;
+    }
+  }
+  .delete-set-form {
+    padding: 0 1rem;
+    align-items: flex-end;
+  }
+  form {
+    width: unset;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-direction: row;
+  }
+}

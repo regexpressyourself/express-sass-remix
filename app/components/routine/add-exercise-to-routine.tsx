@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, X } from "react-feather";
 import type { ActionMeta, MultiValue } from "react-select";
 import Select from "react-select";
-import type { ExerciseSelect } from "~/types/workout";
+import type { ExerciseSelect } from "~/types/routine";
 
-export function AddExerciseToWorkout({
+export function AddExerciseToRoutine({
   display = false,
   setShowAddExerciseModal,
   onChange,
@@ -43,8 +43,7 @@ export function AddExerciseToWorkout({
         ["redirectTo", new URL(window?.location?.href).pathname],
       ])
     );
-  });
-
+  },[]);
   return (
     <div
       className={`modal-backdrop ${!display ? "hidden" : ""}`}
@@ -92,7 +91,7 @@ export function AddExerciseToWorkout({
               className="button "
               type="submit"
             >
-              Add exercise to workout
+              Add exercise to routine
             </button>
           </div>
         </div>

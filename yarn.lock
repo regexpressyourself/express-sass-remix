@@ -1241,7 +1241,7 @@
   dependencies:
     "@remix-run/node" "1.14.0"
 
-"@remix-run/node@1.14.0":
+"@remix-run/node@^1.14.0", "@remix-run/node@1.14.0":
   "integrity" "sha512-TAm6AMAxFTccCAUIMki5VY+6vhBmItFvms1K+uTZc0z62ct0i1JEH+xl2POj6wB0UJhlq8IWchAZ41KKttPV1A=="
   "resolved" "https://registry.npmjs.org/@remix-run/node/-/node-1.14.0.tgz"
   "version" "1.14.0"
@@ -4856,11 +4856,6 @@
     "@types/mdast" "^3.0.0"
     "mdast-util-to-hast" "^11.0.0"
     "unified" "^10.0.0"
-
-"remix@^1.14.0":
-  "integrity" "sha512-FbAZy2mWMIAKww2p/U0FDybdTGy3pJl66Qt2qggJqj+lTRUSAptCiPlXypcSD7XBZvEd1oLH/YlyS3h/xl6LKQ=="
-  "resolved" "https://registry.npmjs.org/remix/-/remix-1.14.0.tgz"
-  "version" "1.14.0"
 
 "require-directory@^2.1.1":
   "integrity" "sha1-jGStX9MNqxyXbiNE/+f3kqam30I="

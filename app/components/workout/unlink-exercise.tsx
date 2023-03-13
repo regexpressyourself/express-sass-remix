@@ -3,15 +3,17 @@ import { Form } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 import { X } from "react-feather";
 
-export function DeleteExercise({
+export function UnlinkExercise({
   exercise,
+  workoutName,
   isOwner,
   canDelete = true,
   display = false,
   setShowDeleteModal,
 }: {
-  exercise: Exercise;
+  exercise: Exercise | null;
   isOwner: boolean;
+  workoutName: string;
   canDelete?: boolean;
   display?: boolean;
   setShowDeleteModal: (value: boolean) => void;
@@ -42,18 +44,20 @@ export function DeleteExercise({
         >
           <X />
         </button>
-        <h2>Delete {exercise.name}?</h2>
+        <h2>
+          Remove {exercise?.name} from {workoutName}?
+        </h2>
         <div className="content">
           {isOwner ? (
             <Form method="post">
               <input type="hidden" name="_method" value="delete-exercise" />
-              <input type="hidden" name="_id" value={exercise.id} />
+              <input type="hidden" name="_id" value={exercise?.id} />
               <button
                 type="submit"
                 className="button modal-action danger"
                 disabled={!canDelete}
               >
-                Delete Exercise
+                Remove exercise from workout
               </button>
             </Form>
           ) : null}

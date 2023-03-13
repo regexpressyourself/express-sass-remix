@@ -1,4 +1,4 @@
-import { useCatch } from "remix";
+import { useCatch } from "@remix-run/react";
 
 export default function ExercisesIndexRoute() {
   return null;
